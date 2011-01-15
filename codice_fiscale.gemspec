@@ -26,6 +26,6 @@ Gem::Specifiaction.new do |g|
   g.platform      = Gem::Platform::RUBY
   g.description   = 'Codice fiscale library'
   g.summary       = 'Tiny library to make easy working with codice fiscale'
-  g.files         = [ 'lib/codice_fiscale.rb' ]
+  g.files         = Dir['lib/**/*']
   g.require_path  = 'lib'
 end
