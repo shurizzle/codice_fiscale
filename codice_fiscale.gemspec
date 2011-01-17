@@ -17,7 +17,7 @@
 # along with codice_fiscale. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-Gem::Specifiaction.new do |g|
+Gem::Specification.new do |g|
   g.name          = 'codice_fiscale'
   g.version       = '0.1'
   g.author        = 'shura'
@@ -28,4 +28,5 @@ Gem::Specifiaction.new do |g|
   g.summary       = 'Tiny library to make easy working with codice fiscale'
   g.files         = Dir['lib/**/*']
   g.require_path  = 'lib'
+  g.executables   = [ ]
 end
