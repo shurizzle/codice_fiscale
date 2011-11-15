@@ -3,7 +3,7 @@
 #
 # This file is part of codice_fiscale.
 #
-# codice_fiscale is free software: you can redistribute it and/or modify 
+# codice_fiscale is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -19,13 +19,13 @@
 
 Gem::Specification.new do |g|
   g.name          = 'codice_fiscale'
-  g.version       = '0.1'
+  g.version       = '0.2'
   g.author        = 'shura'
   g.email         = 'shura1991@gmail.com'
   g.homepage      = 'http://github.com/shurizzle/ruby-codice_fiscale'
   g.platform      = Gem::Platform::RUBY
   g.description   = 'Codice fiscale library'
-  g.summary       = 'Tiny library to make easy working with codice fiscale'
+  g.summary       = 'Tiny library to make easy working with italian "codice fiscale"'
   g.files         = Dir['lib/**/*']
   g.require_path  = 'lib'
   g.executables   = [ ]

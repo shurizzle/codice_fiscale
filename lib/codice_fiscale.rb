@@ -3,7 +3,7 @@
 #
 # This file is part of codice_fiscale.
 #
-# codice_fiscale is free software: you can redistribute it and/or modify 
+# codice_fiscale is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -17,8 +17,8 @@
 # along with codice_fiscale. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-class CodiceFiscale < String
-  VERSION = '0.1'
+class CodiceFiscale
+  VERSION = '0.2'
 
   MONTH = [nil, ?A, ?B, ?C, ?D, ?E, ?H, ?L, ?M, ?P, ?R, ?S, ?T]
 
@@ -82,14 +82,10 @@ class CodiceFiscale < String
 
   def name=(n)
     @name = n.upcase if n.is_a?(String) and n =~ /^[A-Z]+$/i
-
-    generate_code!
   end
 
   def surname=(s)
     @surname = s.upcase if s.is_a?(String) and s =~ /^[A-Z]+$/i
-
-    generate_code!
   end
 
   def bday=(day)
@@ -105,8 +101,6 @@ class CodiceFiscale < String
         @bday
       else @bday
     end
-
-    generate_code!
   end
 
   def bplace=(place)
@@ -119,21 +113,17 @@ class CodiceFiscale < String
         prov: $2
       }
     end
-
-    generate_code!
   end
 
   def gender=(gen)
-    if gen == :M or gen == :m or gen =~ /^m(ale)?$/i
+    if gen.to_s =~ /^m(ale)?$/i
       @gender = :M
-    elsif gen == :F or gen == :f or gen =~ /^f(emale)?$/i
+    elsif gen.to_s =~ /^f(emale)?$/i
       @gender = :F
     end
-
-    generate_code!
   end
 
-  def initialize(options = {})
+  def initialize(options={})
     self.name = options[:name]
     self.surname = options[:surname]
     self.bday = options[:bday]
@@ -141,59 +131,60 @@ class CodiceFiscale < String
     self.gender = options[:gender]
   end
 
-  def generate_code!
+  def to_s(separator=nil)
     return unless self.data?
-    code = ""
+    separator ||= ''
 
     # TRIPLET FOR SURNAME
-    code << (self.surname.scan(/[^AEIOU]/).join + self.surname.scan(/[AEIOU]/).join)[0, 3].ljust(3, 'X')
+    surname = (self.surname.scan(/[^AEIOU]/).join + self.surname.scan(/[AEIOU]/).join)[0, 3].ljust(3, 'X')
 
     # TRIPLET FOR NAME
-    cons = self.name.scan(/[^AEIOU]/).join
-    cons << cons[1] && cons[1] = '' if cons.size > 3
-    code << (cons + self.name.scan(/[AEIOU]/).join)[0, 3].ljust(3, 'X')
+    name = (self.name.scan(/[^AEIOU]/).join.tap {|cons|
+      cons << cons[1] && cons[1] = '' if cons.size > 3
+    } + self.name.scan(/[AEIOU]/).join)[0, 3].ljust(3, 'X')
 
     # QUINTET FOR BDAY AND GENDER
-    code << self.bday[:year].to_s.rjust(2, '0')
-    code << CodiceFiscale::MONTH[self.bday[:mon]]
-    code << (self.bday[:day] + (self.gender == :F ? 40 : 0)).to_s.rjust(2, '0')
+    q = self.bday[:year].to_s.rjust(2, '0') +
+        CodiceFiscale::MONTH[self.bday[:mon]] +
+        (self.bday[:day] + (self.gender == :F ? 40 : 0)).to_s.rjust(2, '0')
 
     # QUARTET FOR BPLACE
-    code << self.belfiore_code(self.bplace[:city], self.bplace[:prov])
-    
-    # CONTROL CODE
-    sum = 0
-    code.split(//).each_with_index {|ch, i|
-      sum += ALFANUM_TO_CODE[i.odd? ? :even : :odd][ch]
-    }
-    code << ((sum % 26) + 65).chr
+    b_place = self.belfiore_code(self.bplace[:city], self.bplace[:prov])
 
-    self.replace(code)
+    # CONTROL CODE
+    code = ([surname, name, q, b_place].join.each_char.each_with_index.inject(0) {|sum, (ch, i)|
+      sum + ALFANUM_TO_CODE[i.odd? ? :even : :odd][ch]
+    } % 26 + 65).chr
+
+    [surname, name, q, b_place, code].join(separator)
   end
 
-  def belfiore_code(city, province = nil)
-    code = nil
+  def self.belfiore_code(city, province=nil)
     File.open(File.join(DBDIR, (province and province == 'EE' ? 'ee.db' : "#{city[0].downcase}.db"))) {|f|
       f.each_line {|line|
         co, c, p = line.strip.split(';')
-        code = co.dup and break if c == city and (province and province != 'EE' ? p == province : true)
+        break co if c == city and (province and province != 'EE' ? p == province : true)
       }
     }
-
-    code
   end
 
-  def alternative(level = 1)
-    code = self.dup
-    code.scan(/[0-9]/).reverse[0, level].each {|n|
-      i = code.rindex(n)
-      code[i] = ALTERNATIVE[code[i]]
+  def belfiore_code(city, province=nil)
+    self.class.belfiore_code(city, province)
+  end
+
+  def alternative(level=1, separator=nil)
+    self.to_s(separator).tap {|code|
+      code.scan(/[0-9]/).reverse[0, level].each {|n, i = code.rindex(n)|
+        code[i] = ALTERNATIVE[code[i]]
+      }
     }
-
-    code
   end
 
-  def alternative!(level = 1)
-    self.replace(self.alternative(level))
+  def ==(code)
+    code = code.to_s.scan(/[A-Z0-9]/i).join
+    return true if self.to_s == code
+    (1..7).any? {|x|
+      self.alternative(x) == code
+    }
   end
 end

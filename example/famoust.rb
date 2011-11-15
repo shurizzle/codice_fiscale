@@ -3,7 +3,7 @@
 #
 # This file is part of codice_fiscale.
 #
-# codice_fiscale is free software: you can redistribute it and/or modify 
+# codice_fiscale is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -24,7 +24,8 @@ rescue LoadError
   retry
 end
 
-cf = CodiceFiscale.new(name: 'Mario', surname: 'Rossi', bplace: 'Milano (MI)')
+#cf = CodiceFiscale.new(name: 'Mario', surname: 'Rossi', bplace: 'Milano (MI)')
+cf = CodiceFiscale.new(name: 'Gelsomino', surname: 'Rossi', bplace: 'Milano (MI)')
 cf.bday = Time.new(1950, 4, 1)
 cf.gender = 'male'
 
@@ -36,8 +37,8 @@ NATO A:   Milano (MI)
 GIORNO:   01/04/1950      SESSO: M
 
 CODICE FISCALE:
-#{cf.scan(/^(...)(...)(.{5})(.{5})$/).flatten.join(' ')}
+#{cf.to_s(' ')}
 
 CODICE FISCALE ALTERNATIVO:
-#{cf.alternative.scan(/^(...)(...)(.{5})(.{5})$/).flatten.join(' ')}
+#{cf.alternative(1, ' ')}
 CODICEFISCALE
